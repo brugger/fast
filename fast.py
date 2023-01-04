@@ -1,5 +1,10 @@
+#!/home/brugger/projects/fast/venv/bin/python3
+#!/usr/bin/env python3
+
 import re
-from asyncio import ensure_future, gather, get_event_loop, sleep
+import argparse
+import datetime
+from asyncio import ensure_future, gather, get_event_loop, sleep, new_event_loop
 from collections import deque
 from statistics import mean
 from time import time
@@ -15,16 +20,35 @@ total = 0
 done = 0
 sessions = []
 
+output = None
+
+
+
+def timestamp() -> int:
+    dt = datetime.datetime.now()
+    ts = float(dt.timestamp())
+    ts *= 1000000000
+
+    return int(ts)
+
 
 async def run():
-    print('fast.com cli')
+    if output == 'verbose':
+        print('fast.com cli')
     token = await get_token()
     urls = await get_urls(token)
     conns = await warmup(urls)
     future = ensure_future(measure(conns))
     result = await progress(future)
     await cleanup()
-    return result
+    if output == 'cli':
+        print(f'speed={result:.1f} mbps')
+    if output == 'brief':
+        print(f'{result:.2f} mbps')
+    if output == 'telegraf':
+        print(f'net,type=wifi speed={result:.3f} {timestamp()}')
+
+    return
 
 
 async def get_token():
@@ -94,7 +118,8 @@ async def progress(future):
         speed = total / elapsed / 2**17
         measurements.append(speed)
 
-        print(f'\033[2K\r{speed:.3f} mbps', end='', flush=True)
+        if output == "verbose":
+            print(f'\033[2K\r{speed:.3f} mbps', end='', flush=True)
 
         if len(measurements) == 10:
             delta = abs(speed - mean(measurements)) / speed * 100
@@ -106,16 +131,39 @@ async def progress(future):
 
 
 async def cleanup():
-    await gather(*[s.close() for s in sessions])
-    print()
+#    print( "closing hanging connections")
+    for s in sessions:
+        await s.close()
+#    await gather(*[s.close() for s in sessions])
+    if output == 'verbose':
+        print()
 
 
 def dot():
-    print('.', end='', flush=True)
+    if output == 'verbose':
+        print('.', end='', flush=True)
 
 
 def main():
-    loop = get_event_loop()
+    parser = argparse.ArgumentParser(description="get internet speed from fast.com")
+    commands = ["verbose", "telegraf"]  # "release",
+    parser.add_argument('command', nargs='*', help="{}".format(",".join(commands)), default=['cli'])
+    args = parser.parse_args()
+
+    command = args.command[0]
+
+    global output
+
+    if command == "verbose":
+        output = 'verbose'
+    elif command == "telegraf":
+        output = 'telegraf'
+    elif command == "brief":
+        output = 'brief'
+    else:
+        output = 'cli'
+
+    loop = new_event_loop()
     return loop.run_until_complete(run())
 
 
