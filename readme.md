@@ -6,16 +6,16 @@ stops when measurements are stable.
 
 ## installation
 
-you will need python 3.6
+you will need python 3.10
 
 ```
-pip install fast.com
+git clone git@github.com:brugger/fast.git
+pip install -r requirements
 ```
 
 ## usage
 
 ```bash
-$ fast
-fast.com cli
-1312.527 mbps
+$ ./fast
+speed=1312.527 mbps
 ```
