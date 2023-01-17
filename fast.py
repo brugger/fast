@@ -43,9 +43,22 @@ async def run():
     await cleanup()
     if output == 'cli':
         print(f'speed={result:.1f} mbps')
-    if output == 'brief':
+
+    elif output == 'brief':
         print(f'{result:.2f} mbps')
-    if output == 'telegraf':
+
+    elif output == 'mon':
+        col = 'red'
+        if result > 800:
+            col = 'green'
+        elif result > 400:
+            col = 'orange'
+        elif result > 200:
+            col = 'coral'            
+
+        print(f"<txt> <span foreground='white' background='{col}'> {result:.2f} mbps </span> </txt>")
+
+    elif output == 'telegraf':
         print(f'net,type=wifi speed={result:.3f} {timestamp()}')
 
     return
@@ -160,6 +173,8 @@ def main():
         output = 'telegraf'
     elif command == "brief":
         output = 'brief'
+    elif command == "mon":
+        output = 'mon'
     else:
         output = 'cli'
 
