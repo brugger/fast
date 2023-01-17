@@ -56,7 +56,23 @@ async def run():
         elif result > 200:
             col = 'coral'            
 
+
         print(f"<txt> <span foreground='white' background='{col}'> {result:.2f} mbps </span> </txt>")
+
+        speeds = []
+        fh = open('/tmp/fast.log', 'r')
+        speeds = [x.rstrip() for x in fh.readlines()]
+        speeds.insert(0,f"{result:.2f}")
+
+        fh = open('/tmp/fast.log', 'w')
+        fh.write('\n'.join(speeds[:12]))
+        fh.close()
+
+
+        new_line = "\n"
+
+        print(f'<tool>Speeds last 10 min.\n=-=-=-=-=-=-=-=-=-=-=-=-=\n{new_line.join(map(str, speeds[:10]))}</tool>')
+
 
     elif output == 'telegraf':
         print(f'net,type=wifi speed={result:.3f} {timestamp()}')
