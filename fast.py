@@ -1,7 +1,8 @@
-#!/home/brugger/projects/fast/venv/bin/python3
+#!/home/brugger/projects/kbr/fast/venv/bin/python3
 #!/usr/bin/env python3
 
 import re
+import os
 import argparse
 import datetime
 from asyncio import ensure_future, gather, get_event_loop, sleep, new_event_loop
@@ -60,8 +61,10 @@ async def run():
         print(f"<txt> <span foreground='white' background='{col}'> {result:.2f} mbps </span> </txt>")
 
         speeds = []
-        fh = open('/tmp/fast.log', 'r')
-        speeds = [x.rstrip() for x in fh.readlines()]
+        if os.path.isfile('/tmp/fast.log'):
+            fh = open('/tmp/fast.log', 'r')
+            speeds = [x.rstrip() for x in fh.readlines()]
+
         speeds.insert(0,f"{result:.2f}")
 
         fh = open('/tmp/fast.log', 'w')
